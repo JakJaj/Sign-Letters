@@ -40,7 +40,7 @@ struct MainView: View {
                         .clipShape(Capsule())
                     
                     Button(action: {
-                        //otwieranie okna z alfabetem
+                        isAlphabethViewActive = true
                     }, label: {
                         Text("Alphabet")
                             .font(.title3)
@@ -51,8 +51,11 @@ struct MainView: View {
                     .padding(.horizontal,25)
                     .background(Color(red: 0.95, green: 0.95, blue: 1))
                     .clipShape(Capsule())
+                    .fullScreenCover(isPresented: $isAlphabethViewActive) {
+                                        AlphabetView()
+                    }
                 }
-                
+            
                 
             }
         }
