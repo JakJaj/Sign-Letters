@@ -55,7 +55,7 @@ struct AlphabetView: View {
                     print("Back button pressed")
                     presentationMode.wrappedValue.dismiss()
                 }) {
-                    Text("\(Image(systemName: "arrowshape.left.fill")) Back")
+                    Text("\(Image(systemName: "chevron.backward")) Back")
             })
             }
         }
