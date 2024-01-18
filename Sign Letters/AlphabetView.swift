@@ -40,7 +40,9 @@ struct AlphabetView: View {
     
     var body: some View {
         NavigationView {
+            
                 List{
+                    
                     ForEach(data){ lett in
                         if(colorScheme == .light){
                             lett.imageLightMode.resizable().scaledToFit().frame(width:300, height: 250)
@@ -50,6 +52,7 @@ struct AlphabetView: View {
                         }
                     }
                 }
+                .navigationTitle(Text("Alphabet"))
                 .navigationBarItems(leading:
                 Button(action: {
                     print("Back button pressed")

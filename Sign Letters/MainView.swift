@@ -28,7 +28,7 @@ struct MainView: View {
                 
                 VStack {
                     Button(action: {
-                        //otwieranie okna z kamera
+                        isCameraViewActive = true
                     }, label: {
                         Text("Sign Recognition")
                             .font(.title3)
@@ -38,6 +38,9 @@ struct MainView: View {
                         .padding(.horizontal,25)
                         .background(Color(red: 0.95, green: 0.95, blue: 1))
                         .clipShape(Capsule())
+                        .fullScreenCover(isPresented: $isCameraViewActive) {
+                                            CameraView()
+                        }
                     
                     Button(action: {
                         isAlphabethViewActive = true
