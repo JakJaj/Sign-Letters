@@ -5,7 +5,7 @@ struct CameraPreview: View{
     
     var body: some View{
         if let image = image{
-            Image(image,scale: 1.0,orientation: .up,label: label)
+            Image(image,scale: 0.1,orientation: .up,label: label)
         }else{
             Color.black
             Text("HERE")

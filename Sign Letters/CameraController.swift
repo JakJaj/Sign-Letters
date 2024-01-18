@@ -62,8 +62,16 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
         guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return}
         let mlMultiArray = processImage(cgImage)
         
+        if let mlMultiArray = processImage(cgImage) { // test co widzi model z kamery!
+            let MLImage = createImage(from: mlMultiArray)
+            DispatchQueue.main.async{[unowned self] in
+                self.frame = MLImage
+            }
+        }else{
+            print("nlMultiArray is nil")
+        } //test co widzi model z kamery
         
-        
+        /*
         if let mlMultiArray = processImage(cgImage) {
                 predictUsingModel(input: mlMultiArray)
         }else{
@@ -73,6 +81,7 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
         DispatchQueue.main.async{[unowned self] in
             self.frame = cgImage
         }
+         */
     }
     func predictUsingModel(input: MLMultiArray) {
         guard let model = self.CNNmodel else {
@@ -141,7 +150,7 @@ extension CameraController {
         let scaledImage = grayScaleImage.transformed(by: scale)
         
         // Normalize pixel values to be between 0 and 1
-        let normalizedImage = scaledImage.applyingFilter("CIColorControls", parameters: ["inputBrightness": 0, "inputContrast": 1, "inputSaturation": 0])
+        //let normalizedImage = scaledImage.applyingFilter("CIColorControls", parameters: ["inputBrightness": 0, "inputContrast": 1, "inputSaturation": 0])
         
         // Create MLMultiArray
         guard let mlMultiArray = try? MLMultiArray(shape: [1, 28, 28, 1], dataType: .float32) else {
@@ -151,7 +160,7 @@ extension CameraController {
         
         // Assign pixel values to MLMultiArray
         let context = CIContext()
-        guard let cgImage = context.createCGImage(normalizedImage, from: normalizedImage.extent) else {
+        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
             return nil
         }
         let pixelData = cgImage.dataProvider!.data!
