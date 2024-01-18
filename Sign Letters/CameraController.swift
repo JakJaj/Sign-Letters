@@ -64,9 +64,59 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
         
         
         
+        if let mlMultiArray = processImage(cgImage) {
+                predictUsingModel(input: mlMultiArray)
+        }else{
+            print("nlMultiArray is nil")
+        }
+        
         DispatchQueue.main.async{[unowned self] in
             self.frame = cgImage
         }
+    }
+    func predictUsingModel(input: MLMultiArray) {
+        guard let model = self.CNNmodel else {
+            print("Model is not loaded.")
+            return
+        }
+        
+        do {
+            let modelInput = model_sign_mnistInput(var_0_conv_layer_input: input)
+            let predictionOutput = try model.prediction(from: modelInput)
+            if let output = predictionOutput.featureValue(for: "Identity")?.multiArrayValue {
+                // Use the output here
+                var maxProbability: Float = 0.0
+                            var maxIndex: Int = 0
+                            for i in 0..<output.count {
+                                let probability = output[i].floatValue
+                                if probability > maxProbability {
+                                    maxProbability = probability
+                                    maxIndex = i
+                                }
+                            }
+                print("Label with highest probability: \(maxIndex), Probability: \(maxProbability)")
+            }
+        } catch {
+            print("Failed to make prediction. Error: \(error)")
+        }
+    }
+    func createImage(from mlMultiArray: MLMultiArray) -> CGImage? {
+        let height = mlMultiArray.shape[1].intValue
+        let width = mlMultiArray.shape[2].intValue
+
+        var pixelData = Data(capacity: width * height)
+        for y in 0..<height {
+            for x in 0..<width {
+                let pixelValue = mlMultiArray[[0, y, x, 0] as [NSNumber]].floatValue
+                let pixelUInt8 = UInt8(pixelValue * 255.0)
+                pixelData.append(pixelUInt8)
+            }
+        }
+
+        let dataProvider = CGDataProvider(data: pixelData as CFData)
+        let cgImage = CGImage(width: width, height: height, bitsPerComponent: 8, bitsPerPixel: 8, bytesPerRow: width, space: CGColorSpaceCreateDeviceGray(), bitmapInfo: [], provider: dataProvider!, decode: nil, shouldInterpolate: true, intent: .defaultIntent)
+
+        return cgImage
     }
     
     private func imageFromSampleBuffer(sampleBuffer: CMSampleBuffer) -> CGImage?{
@@ -95,6 +145,7 @@ extension CameraController {
         
         // Create MLMultiArray
         guard let mlMultiArray = try? MLMultiArray(shape: [1, 28, 28, 1], dataType: .float32) else {
+            
             return nil
         }
         
