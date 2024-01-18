@@ -3,6 +3,8 @@ import CoreImage
 import CoreML
 class CameraController: NSObject, ObservableObject{
     @Published var frame:CGImage?
+    @Published var prediction:Int?
+    @Published var percent:Float?
     private var permisionGranted = false
     private let captureSession = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "sessionQueue")
@@ -55,6 +57,13 @@ class CameraController: NSObject, ObservableObject{
         captureSession.addOutput(videoOutput)
         videoOutput.connection(with: .video)?.videoRotationAngle = 90
     }
+    func stopCaptureSession() {
+        sessionQueue.async { [unowned self] in
+            if self.captureSession.isRunning {
+                self.captureSession.stopRunning()
+            }
+        }
+    }
 }
 //MARK: Getting camera frames and sending them to a CameraView
 extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
@@ -72,6 +81,7 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
         
         DispatchQueue.main.async{[unowned self] in
             self.frame = cgImage
+
         }
     }
     func predictUsingModel(input: MLMultiArray) {
@@ -95,6 +105,10 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
                                 }
                             }
                 print("Label with highest probability: \(maxIndex), Probability: \(maxProbability)")
+                DispatchQueue.main.async{[unowned self] in
+                    self.prediction = maxIndex
+                    self.percent = maxProbability
+                }
             }
         } catch {
             print("Failed to make prediction. Error: \(error)")

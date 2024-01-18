@@ -8,7 +8,6 @@ struct CameraPreview: View{
             Image(image,scale: 1.0,orientation: .up,label: label)
         }else{
             Color.black
-            Text("HERE")
         }
     }
     
