@@ -7,6 +7,7 @@ class CameraController: NSObject, ObservableObject{
     private let captureSession = AVCaptureSession()
     private let sessionQueue = DispatchQueue(label: "sessionQueue")
     private let context = CIContext()
+    private var CNNmodel:MLModel?
     
     override init() {
         super.init()
@@ -15,8 +16,16 @@ class CameraController: NSObject, ObservableObject{
             self.setupCaptureSession()
             self.captureSession.startRunning()
         }
+        loadModel()
     }
-    
+    private func loadModel() {
+            if let modelURL = Bundle.main.url(forResource: "model_sign_mnist", withExtension: "mlmodelc"),
+               let model = try? MLModel(contentsOf: modelURL) {
+                self.CNNmodel = model
+            }else{
+                print("Something went wrong while loading a model")
+            }
+        }
     func checkPermision(){
         switch AVCaptureDevice.authorizationStatus(for: .video){
         case.authorized:
