@@ -1,19 +1,21 @@
-//
-//  CameraPreview.swift
-//  Sign Letters
-//
-//  Created by Jakub Jajonek on 17/01/2024.
-//
-
-import Foundation
 import SwiftUI
-
-struct CameraPreview: UIViewRepresentable {
-    let cameraController: CameraController
-
-    func makeUIView(context: Context) -> UIView {
-        return cameraController.previewView
+struct CameraPreview: View{
+    var image:CGImage?
+    private let label = Text("Frame")
+    
+    var body: some View{
+        if let image = image{
+            Image(image,scale: 1.0,orientation: .up,label: label)
+        }else{
+            Color.black
+            Text("HERE")
+        }
     }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
+    
+    
+    struct CameraPreview_Previews:PreviewProvider{
+        static var previews: some View{
+            CameraPreview()
+        }
+    }
 }

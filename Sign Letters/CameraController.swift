@@ -1,97 +1,67 @@
-//
-//  CameraController.swift
-//  Sign Letters
-//
-//  Created by Jakub Jajonek on 17/01/2024.
-//
-
-import Foundation
 import AVFoundation
-import SwiftUI
 import CoreImage
-import CoreML
-
-class CameraController: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
-    private var session = AVCaptureSession()
-    var multiArray: MLMultiArray?
-    
-    lazy var model: model_sign_mnist = {
-        do {
-            // Use the name of your model file without the extension
-            if let modelURL = Bundle.main.url(forResource: "model_sign_mnist", withExtension: "mlmodelc") {
-                return try model_sign_mnist(contentsOf: modelURL)
-            } else {
-                fatalError("Failed to locate the Core ML model file.")
-            }
-        } catch {
-            fatalError("Error loading the Core ML model: \(error)")
-        }
-    }()
-    
-    @Published var previewView = UIView()
+class CameraController: NSObject, ObservableObject{
+    @Published var frame:CGImage?
+    private var permisionGranted = false
+    private let captureSession = AVCaptureSession()
+    private let sessionQueue = DispatchQueue(label: "sessionQueue")
+    private let context = CIContext()
     
     override init() {
         super.init()
-        setupCamera()
-    }
-    
-    func checkForCamera() {
-        AVCaptureDevice.requestAccess(for: .video) { (granted) in
-            if granted {
-                self.startSession()
-            } else {
-                print("Brak dostępu do kamery.")
-            }
+        checkPermision()
+        sessionQueue.async{ [unowned self] in
+            self.setupCaptureSession()
+            self.captureSession.startRunning()
         }
     }
     
-    private func setupCamera() {
-        guard let device = AVCaptureDevice.default(for: .video) else {
-            return
+    func checkPermision(){
+        switch AVCaptureDevice.authorizationStatus(for: .video){
+        case.authorized:
+            permisionGranted = true
+        case.notDetermined:
+            requestPermision()
+            
+        default:
+            permisionGranted = false
         }
         
-        do {
-            let input = try AVCaptureDeviceInput(device: device)
-            if session.canAddInput(input) {
-                session.addInput(input)
-            }
-            
-            let output = AVCaptureVideoDataOutput()
-            if session.canAddOutput(output) {
-                session.addOutput(output)
-            }
-            
-            output.setSampleBufferDelegate(self, queue: DispatchQueue(label: "cameraQueue"))
-            
-            // Use a `UIViewControllerRepresentable` to wrap the UIKit-based preview layer
-            let viewController = UIViewController()
-            let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-            previewLayer.videoGravity = .resizeAspectFill
-            previewLayer.frame = viewController.view.layer.bounds
-            viewController.view.layer.addSublayer(previewLayer)
-            
-            // Convert the `UIViewController` to a SwiftUI view
-            previewView = viewController.view
-        } catch {
-            print(error.localizedDescription)
-        }
     }
-    
-    func startSession() {
-        if !session.isRunning {
-            session.startRunning()
+    func requestPermision(){
+        AVCaptureDevice.requestAccess(for: .video) { [unowned self] granted in
+            self.permisionGranted = granted
         }
+        
     }
-    
-    func stopSession() {
-        if session.isRunning {
-            session.stopRunning()
-        }
+    func setupCaptureSession(){
+        let videoOutput = AVCaptureVideoDataOutput()
+        
+        guard permisionGranted else {return}
+        guard let videoDevice = AVCaptureDevice.default(.builtInDualWideCamera, for: .video, position: .back) else {return}
+        guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else {return}
+        captureSession.addInput(videoDeviceInput)
+        videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sampleBufferQueue"))
+        captureSession.addOutput(videoOutput)
+        videoOutput.connection(with: .video)?.videoRotationAngle = 90
     }
-    
-    
-    // Implementuj funkcje delegata AVCaptureVideoDataOutputSampleBufferDelegate, aby otrzymywać dane obrazu
+}
+
+extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        // Assume 'sampleBuffer' is your CMSampleBuffer
+        guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return}
+        
+        DispatchQueue.main.async{[unowned self] in
+            self.frame = cgImage
+        }
     }
+    
+    private func imageFromSampleBuffer(sampleBuffer: CMSampleBuffer) -> CGImage?{
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {return nil}
+        let ciImage = CIImage(cvPixelBuffer: imageBuffer)
+        guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else {return nil}
+        
+        return cgImage
+    }
+    
 }
