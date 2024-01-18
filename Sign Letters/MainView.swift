@@ -24,6 +24,9 @@ struct MainView: View {
                     .font(.largeTitle)
                     .fontWeight(.heavy)
                     .foregroundColor(Color(red: 0.85, green: 0.85, blue: 1))
+                    .padding(.bottom, 50)
+                Text("An iOS app with a sign language recognition using a CNN model for a University Project")
+                    .multilineTextAlignment(.center)
                 .padding(.bottom, 250)
                 
                 VStack {
