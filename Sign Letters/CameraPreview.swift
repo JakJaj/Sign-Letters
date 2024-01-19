@@ -10,8 +10,6 @@ struct CameraPreview: View{
             Color.black
         }
     }
-    
-    
     struct CameraPreview_Previews:PreviewProvider{
         static var previews: some View{
             CameraPreview()
