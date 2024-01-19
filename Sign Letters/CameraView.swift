@@ -47,7 +47,7 @@ struct CameraView: View {
                         23:"Y"
                     ]
                     if let letter = answers[prediction],let percent = model.percent{
-                        if (percent * 100 > 60.0){
+                        if (percent * 100 > 50.0){
                             Text(letter)
                                 .offset(y:50)
                                 .font(.largeTitle)

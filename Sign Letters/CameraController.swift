@@ -69,11 +69,9 @@ class CameraController: NSObject, ObservableObject{
 extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return}
-        let mlMultiArray = processImage(cgImage)
-        
-        
-        
-        if let mlMultiArray = processImage(cgImage) {
+        let contrastValue: Float = 1.1
+                
+        if let mlMultiArray = processImage(cgImage,contrast: contrastValue) {
                 predictUsingModel(input: mlMultiArray)
         }else{
             print("nlMultiArray is nil")
@@ -144,11 +142,21 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
 }
 
 extension CameraController {
-    func processImage(_ image: CGImage) -> MLMultiArray? {
+    func processImage(_ image: CGImage, contrast: Float) -> MLMultiArray? {
         let ciImage = CIImage(cgImage: image)
         
+        // Apply contrast filter
+        guard let contrastFilter = CIFilter(name: "CIColorControls") else {
+            return nil
+        }
+        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey)
+        guard let contrastedImage = contrastFilter.outputImage else {
+            return nil
+        }
+        
         // Convert image to grayscale
-        let grayScaleImage = ciImage.applyingFilter("CIPhotoEffectMono")
+        let grayScaleImage = contrastedImage.applyingFilter("CIPhotoEffectMono")
         
         // Resize image to 28x28
         let scale = CGAffineTransform(scaleX: 28 / CGFloat(image.width), y: 28 / CGFloat(image.height))
