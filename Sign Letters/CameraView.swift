@@ -8,17 +8,11 @@ struct CameraView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject private var model = CameraController()
     
-    
-    
     var body: some View {
-        
-        
-        
         NavigationStack{
             ZStack{
                 CameraPreview(image: model.frame)
                     .ignoresSafeArea()
-                
                 if let prediction = model.prediction{
                     let answers = [
                         0:"A",
@@ -73,17 +67,13 @@ struct CameraView: View {
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.red)
-                            
                         }
                     }
                     
                 }
-                
-                    
-                
             }.navigationTitle(Text("Letter recognition"))
                 .navigationBarItems(leading:
-                Button(action: {
+                                        Button(action: {
                     print("Back button pressed")
                     model.stopCaptureSession()
                     presentationMode.wrappedValue.dismiss()

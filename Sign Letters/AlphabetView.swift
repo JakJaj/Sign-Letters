@@ -1,12 +1,4 @@
-//
-//  AlphabetView.swift
-//  Sign Letters
-//
-//  Created by Jakub Jajonek on 17/01/2024.
-//
-
 import SwiftUI
-
 struct AlphabetView: View {
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.colorScheme) var colorScheme
@@ -37,33 +29,29 @@ struct AlphabetView: View {
                 Letter(name: "y", imageDarkMode: Image("y_labelled_dark_transparent"), imageLightMode: Image("y_labelled")),
                 Letter(name: "z", imageDarkMode: Image("z_labelled_dark_transparent"), imageLightMode: Image("z_labelled"))
     ]
-    
     var body: some View {
         NavigationView {
-            
-                List{
-                    
-                    ForEach(data){ lett in
-                        if(colorScheme == .light){
-                            lett.imageLightMode.resizable().scaledToFit().frame(width:300, height: 250)
-                        }
-                        if(colorScheme == .dark){
-                            lett.imageDarkMode.resizable().scaledToFit().frame(width:300, height: 250)
-                        }
+            List{
+                ForEach(data){ lett in
+                    if(colorScheme == .light){
+                        lett.imageLightMode.resizable().scaledToFit().frame(width:300, height: 250)
+                    }
+                    if(colorScheme == .dark){
+                        lett.imageDarkMode.resizable().scaledToFit().frame(width:300, height: 250)
                     }
                 }
-                .navigationTitle(Text("Alphabet"))
-                .navigationBarItems(leading:
-                Button(action: {
-                    print("Back button pressed")
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Text("\(Image(systemName: "chevron.backward")) Back")
-            })
             }
+            .navigationTitle(Text("Alphabet"))
+            .navigationBarItems(leading:
+            Button(action: {
+                print("Back button pressed")
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("\(Image(systemName: "chevron.backward")) Back")
+            })
         }
+    }
 }
-
 #Preview {
     AlphabetView()
 }
