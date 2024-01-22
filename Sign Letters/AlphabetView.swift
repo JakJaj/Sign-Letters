@@ -40,9 +40,7 @@ struct AlphabetView: View {
     
     var body: some View {
         NavigationView {
-            
                 List{
-                    
                     ForEach(data){ lett in
                         if(colorScheme == .light){
                             lett.imageLightMode.resizable().scaledToFit().frame(width:300, height: 250)
