@@ -20,7 +20,7 @@ class CameraController: NSObject, ObservableObject{
         }
         loadModel()
     }
-    private func loadModel() {
+    private func loadModel() { //wczytywanie modelu
             if let modelURL = Bundle.main.url(forResource: "model_sign_mnist", withExtension: "mlmodelc"),
                let model = try? MLModel(contentsOf: modelURL) {
                 self.CNNmodel = model
@@ -28,7 +28,7 @@ class CameraController: NSObject, ObservableObject{
                 print("Something went wrong while loading a model")
             }
         }
-    func checkPermision(){
+    func checkPermision(){ //sprawdzenie czy uzytkownik dal pozwolenie na uzywanie kamery
         switch AVCaptureDevice.authorizationStatus(for: .video){
         case.authorized:
             permisionGranted = true
@@ -38,12 +38,12 @@ class CameraController: NSObject, ObservableObject{
             permisionGranted = false
         }
     }
-    func requestPermision(){
+    func requestPermision(){ //proszenie uzytkownika o dostep do kamery
         AVCaptureDevice.requestAccess(for: .video) { [unowned self] granted in
             self.permisionGranted = granted
         }
     }
-    func setupCaptureSession(){
+    func setupCaptureSession(){ //zakonczenie sesji wykorzystywania kamery
         let videoOutput = AVCaptureVideoDataOutput()
         
         guard permisionGranted else {return}
@@ -65,19 +65,19 @@ class CameraController: NSObject, ObservableObject{
 //MARK: Getting camera frames and sending them to a CameraView
 extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return}
+        guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return} //tworzenie obrazu z buffora
         let contrastValue: Float = 1.1
         let saturationValue: Float = 1.3
-        if let mlMultiArray = processImage(cgImage,contrast: contrastValue, saturation: saturationValue) {
-                predictUsingModel(input: mlMultiArray)
+        if let mlMultiArray = processImage(cgImage,contrast: contrastValue, saturation: saturationValue) { //preprocesowanie obrazu na multiarray ze znormalizowanym obrazem o ustalonej wielkosci
+                predictUsingModel(input: mlMultiArray) //przewidywanie
         }else{
             print("nlMultiArray is nil")
         }
         DispatchQueue.main.async{[unowned self] in
-            self.frame = cgImage
+            self.frame = cgImage //przenoszenie wartosci do CameraPreview
         }
     }
-    func predictUsingModel(input: MLMultiArray) {
+    func predictUsingModel(input: MLMultiArray) { //przetwarzanie obrazu przez model
         guard let model = self.CNNmodel else {
             print("Model is not loaded.")
             return
@@ -105,7 +105,7 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
             print("Failed to make prediction. Error: \(error)")
         }
     }
-    func createImage(from mlMultiArray: MLMultiArray) -> CGImage? {
+    func createImage(from mlMultiArray: MLMultiArray) -> CGImage? { //tworzenie obrazu z mlmultiarray do podgladu co otrzymuje model
         let height = mlMultiArray.shape[1].intValue
         let width = mlMultiArray.shape[2].intValue
 
@@ -134,37 +134,37 @@ extension CameraController {
     func processImage(_ image: CGImage, contrast: Float, saturation:Float) -> MLMultiArray? {
         let ciImage = CIImage(cgImage: image)
         
-        guard let contrastFilter = CIFilter(name: "CIColorControls") else {//kontrast
+        guard let contrastFilter = CIFilter(name: "CIColorControls") else {//tworzenie filtra do kontrastu
             return nil
         }
-        guard let colorControlsFilter = CIFilter(name: "CIColorControls") else {//saturacja
+        guard let colorControlsFilter = CIFilter(name: "CIColorControls") else {// tworzenie filtra do saturacji
             return nil
         }
-        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey) //kontrast
-        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey) //kontrast
-        colorControlsFilter.setValue(saturation, forKey: kCIInputSaturationKey) //saturacja
-        guard let adjustedImage = contrastFilter.outputImage else {
+        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey) //nakladanie kontrast
+        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey) // nakladanie kontrast
+        colorControlsFilter.setValue(saturation, forKey: kCIInputSaturationKey) //nakladanie saturacja
+        guard let adjustedImage = contrastFilter.outputImage else { //wynik nalozenia filtrow
             return nil
         }
         
-        let grayScaleImage = adjustedImage.applyingFilter("CIPhotoEffectMono")
+        let grayScaleImage = adjustedImage.applyingFilter("CIPhotoEffectMono") //tworzenie filtra kolor -> skala szarosci
         
         let scale = CGAffineTransform(scaleX: 28 / CGFloat(image.width), y: 28 / CGFloat(image.height))
-        let scaledImage = grayScaleImage.transformed(by: scale)
+        let scaledImage = grayScaleImage.transformed(by: scale) // kolor -> skala szarosci
         
-        guard let mlMultiArray = try? MLMultiArray(shape: [1, 28, 28, 1], dataType: .float32) else {
+        guard let mlMultiArray = try? MLMultiArray(shape: [1, 28, 28, 1], dataType: .float32) else { // tworzenie mlmultiarray do przetrzymywanie danych o ustalonym rozmiarze 1x28x28x1
             return nil
         }
         
         let context = CIContext()
-        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
+        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else { //konwersja na CGImage ktorego mozna przetwarzac
             return nil
         }
         let pixelData = cgImage.dataProvider!.data!
-        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData) //normalizacja
         for y in 0..<cgImage.height {
             for x in 0..<cgImage.width {
-                let pixelIndex = 4 * (y * cgImage.width + x) // Adjusted for RGBA
+                let pixelIndex = 4 * (y * cgImage.width + x)
                 let pixelValue = Float(data[pixelIndex]) / 255.0
                 mlMultiArray[[0, y, x, 0] as [NSNumber]] = NSNumber(value: pixelValue)
             }
