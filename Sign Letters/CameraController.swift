@@ -61,8 +61,8 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return} //konwersja na zdjecie z buffera pixeli
         let contrastValue: Float = 1.1 //wartosc kontrastu
-        
-        if let mlMultiArray = processImage(cgImage,contrast:contrastValue) { // test co widzi model z kamery!
+        let saturationValue: Float = 1.3 //wartosc saturacji
+        if let mlMultiArray = processImage(cgImage,contrast:contrastValue, saturation: saturationValue) { // test co widzi model z kamery!
             let MLImage = createImage(from: mlMultiArray) //obraz z tego co widzi kamera
             DispatchQueue.main.async{[unowned self] in
                 self.frame = MLImage
@@ -108,7 +108,7 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
             print("Failed to make prediction. Error: \(error)")
         }
     }
-    func createImage(from mlMultiArray: MLMultiArray) -> CGImage? { //tworzenie modelu z mlMultiArrayu
+    func createImage(from mlMultiArray: MLMultiArray) -> CGImage? { //tworzenie obrazu z mlMultiArrayu
         let height = mlMultiArray.shape[1].intValue
         let width = mlMultiArray.shape[2].intValue
 
@@ -138,19 +138,24 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
 }
 
 extension CameraController {
-    func processImage(_ image: CGImage, contrast: Float) -> MLMultiArray? { //przetwarzanie obrazu na mlmultiarray 1x28x28x1 w skali szarosci z normalizacja
+    func processImage(_ image: CGImage, contrast: Float, saturation: Float) -> MLMultiArray? { //przetwarzanie obrazu na mlmultiarray 1x28x28x1 w skali szarosci z normalizacja
         let ciImage = CIImage(cgImage: image)
+        
         
         guard let contrastFilter = CIFilter(name: "CIColorControls") else { //kontrast
             return nil
         }
-        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey)
-        guard let contrastedImage = contrastFilter.outputImage else {
+        guard let colorControlsFilter = CIFilter(name: "CIColorControls") else { //saturacja
+            return nil
+        }
+        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey) //kontrast
+        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey)//kontrast
+        colorControlsFilter.setValue(saturation, forKey: kCIInputSaturationKey) //saturacja
+        guard let adjustedImage = contrastFilter.outputImage else {
             return nil
         }
         
-        let grayScaleImage = contrastedImage.applyingFilter("CIPhotoEffectMono") //kolor -> skala szarosci
+        let grayScaleImage = adjustedImage.applyingFilter("CIPhotoEffectMono") //kolor -> skala szarosci
         
         let scale = CGAffineTransform(scaleX: 28 / CGFloat(image.width), y: 28 / CGFloat(image.height))
         let scaledImage = grayScaleImage.transformed(by: scale)//przeskaloawnie do 28x28
