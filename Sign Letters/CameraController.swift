@@ -67,8 +67,8 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let cgImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else {return}
         let contrastValue: Float = 1.1
-    
-        if let mlMultiArray = processImage(cgImage,contrast: contrastValue) {
+        let saturationValue: Float = 1.3
+        if let mlMultiArray = processImage(cgImage,contrast: contrastValue, saturation: saturationValue) {
                 predictUsingModel(input: mlMultiArray)
         }else{
             print("nlMultiArray is nil")
@@ -131,19 +131,23 @@ extension CameraController: AVCaptureVideoDataOutputSampleBufferDelegate{
     }
 }
 extension CameraController {
-    func processImage(_ image: CGImage, contrast: Float) -> MLMultiArray? {
+    func processImage(_ image: CGImage, contrast: Float, saturation:Float) -> MLMultiArray? {
         let ciImage = CIImage(cgImage: image)
         
-        guard let contrastFilter = CIFilter(name: "CIColorControls") else {
+        guard let contrastFilter = CIFilter(name: "CIColorControls") else {//kontrast
             return nil
         }
-        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey)
-        guard let contrastedImage = contrastFilter.outputImage else {
+        guard let colorControlsFilter = CIFilter(name: "CIColorControls") else {//saturacja
+            return nil
+        }
+        contrastFilter.setValue(ciImage, forKey: kCIInputImageKey) //kontrast
+        contrastFilter.setValue(contrast, forKey: kCIInputContrastKey) //kontrast
+        colorControlsFilter.setValue(saturation, forKey: kCIInputSaturationKey) //saturacja
+        guard let adjustedImage = contrastFilter.outputImage else {
             return nil
         }
         
-        let grayScaleImage = contrastedImage.applyingFilter("CIPhotoEffectMono")
+        let grayScaleImage = adjustedImage.applyingFilter("CIPhotoEffectMono")
         
         let scale = CGAffineTransform(scaleX: 28 / CGFloat(image.width), y: 28 / CGFloat(image.height))
         let scaledImage = grayScaleImage.transformed(by: scale)

@@ -58,13 +58,6 @@ struct CameraView: View {
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                                 .foregroundStyle(Color.red)
-                            
-                            let percentString = String.init(format: "%.2f",  100 - percent * 100)
-                            Text(percentString + "%")
-                                .offset(y:150)
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                                .foregroundStyle(Color.red)
                         }
                     }
                     
