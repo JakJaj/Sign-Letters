@@ -1,4 +1,4 @@
-# SignLanguageRecognition iOS App
+# Sign Letters iOS App
 
 ## Overview
 
@@ -42,17 +42,19 @@ Welcome to SignLanguageRecognition, an iOS application designed to recognize sig
 
 ## Model
 
-The CNN model used for sign language letter recognition is included in the project. You can find the model file in the Models folder. If you want to train your own model, feel free to replace the existing one.
+The CNN model used for sign language letter recognition is included in the project. You can find the model file in the Models folder and in a main project folder. If you want to train your own model, feel free to replace the existing one.
 
 The dataset used for my model training: [Sign Language Mnist](https://www.kaggle.com/datasets/datamunge/sign-language-mnist)
 
 ## This app was developed using the following open-source libraries:
 
+- SwiftUI for declaring the user interface and its behaviour
 - CoreML for integrating machine learning models into the app.
 - AVFoundation for camera handling and video capture.
+- CoreImage for built-in filters to process images.
 
 ## Issues and Contributions
 
 If you encounter any issues or have suggestions for improvements, please create an issue on the GitHub repository. Contributions are also welcome through pull requests.
 
- **Thank you for using SignLanguageRecognition! If you have any questions or feedback, please don't hesitate to contact us.**
+ **Thank you for using Sign Letters! If you have any questions or feedback, please don't hesitate to contact me.**
