@@ -29,11 +29,12 @@ Welcome to SignLanguageRecognition, an iOS application designed to recognize sig
    ```
 2. **Open a project in Xcode**
     ```bash
-    cd SignLanguageRecognition
-    open SignLanguageRecognition.xcodeproj
+    cd Sign-Letters
+    open Sign\ Letters.xcodeproj
     ```
 3. **Build and run the app on your iPhone or simulator**
 
+Note that using the simulator is not recommended when you want to try the letter recognition feature because you can't use the simulator's camera. Therefore, if you want to check out that feature, you need an iPhone that meets the requirements mentioned above.
 ## Usage
 
 - Launch the app on your iPhone.
